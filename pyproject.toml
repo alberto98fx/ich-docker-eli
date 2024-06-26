@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "tech-interview-challenge"
+version = "0.1.0"
+description = ""
+authors = ["Alb <alberto98fx@gmail.com>"]
+readme = "README.md"
+packages = [{include = "tech_interview_challenge"}]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+python-dotenv = "^1.0.1"
+jinja2 = "^3.1.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

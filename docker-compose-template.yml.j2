@@ -1,0 +1,62 @@
+version: '3.8'
+
+networks:
+  chnet:
+    driver: bridge
+
+services:
+  consul:
+    image: hashicorp/consul:latest
+    container_name: consul
+    restart: unless-stopped
+    networks:
+      - chnet
+    ports:
+      - "8500:8500"
+    command: "consul agent -dev -client=0.0.0.0"
+
+{% for service in services %}
+  {{ service.name }}:
+    image: mysql:8.0
+    container_name: {{ service.name }}
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: {{ mysql_root_password }}
+      MYSQL_DATABASE: game
+    volumes:
+      - {{ service.backup_path }}:/docker-entrypoint-initdb.d/dump.sql.gz
+    ports:
+      - "{{ service.port }}:3306"
+    networks:
+      - chnet
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "--silent"]
+      interval: 10s
+      retries: 10
+      start_period: 30s
+      timeout: 5s
+    depends_on:
+      - consul
+    entrypoint: >
+      sh -c "while ! curl -s http://consul:8500/v1/status/leader; do echo waiting for consul; sleep 3; done &&
+             echo 'registering in consul' &&
+             curl -X PUT --data '{\"ID\": \"{{ service.name }}\", \"Name\": \"mysql\", \"Address\": \"{{ service.name }}\", \"Port\": 3306}' http://consul:8500/v1/agent/service/register &&
+             docker-entrypoint.sh mysqld --default-authentication-plugin=mysql_native_password"
+{% endfor %}
+
+  elixir_api:
+    restart: unless-stopped
+    build:
+      context: ./db_query_api
+    ports:
+      - "4000:4000"
+    environment:
+      CONSUL_HTTP_ADDR: "http://consul:8500"
+      MYSQL_ROOT_PASSWORD: "{{ mysql_root_password }}"
+    depends_on:
+      - consul
+{% for service in services %}
+      - {{ service.name }}
+{% endfor %}
+    networks:
+      - chnet

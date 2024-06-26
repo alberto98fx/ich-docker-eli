@@ -1,0 +1,26 @@
+name: Boot-up project
+
+on: [push]
+
+jobs:
+  run-script:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+    - name: Poetry install packages
+      run: poetry install
+    - name: Poetry run docker-compose template
+      run: poetry run python generate_docker_compose.py
+    - name: Docker Compose up
+      run: docker-compose up --build -d
+    - name: Wait for Mysql to accept connections
+      run: sleep 30
+    - name: Run curl
+      run: |
+        curl -X POST -H "Content-Type: application/json" -d '{"query":"SELECT * from player;"}' http://localhost:4000/query
