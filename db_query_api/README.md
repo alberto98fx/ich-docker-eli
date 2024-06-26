@@ -1,6 +1,6 @@
 # DbQueryAPI
 
-**TODO: Add description**
+DB query api for the project
 
 ## Installation
 
