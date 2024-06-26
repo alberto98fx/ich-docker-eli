@@ -1,10 +1,9 @@
 [tool.poetry]
-name = "tech-interview-challenge"
+name = "ich-docker-eli"
 version = "0.1.0"
 description = ""
 authors = ["Alb <alberto98fx@gmail.com>"]
 readme = "README.md"
-packages = [{include = "tech_interview_challenge"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
